@@ -3,6 +3,7 @@ from tkinter import messagebox
 import customtkinter
 import subprocess
 import os
+import threading
 from .GeneratePDF import guardar_pdf
 
 class NmapGUI:
@@ -11,6 +12,9 @@ class NmapGUI:
         self.parent = parent
         # Inicializar una lista para almacenar el historial de resultados
         self.scan_history = []
+        self.scan_thread = None  # Hilo para el escaneo
+        self.process = None
+        self.scan_running = False  # Flag para verificar si hay un escaneo en ejecución
         self.setup_ui()
 
     def setup_ui(self):
@@ -80,19 +84,20 @@ class NmapGUI:
         button_frame.grid(row=1, column=0, padx=10, pady=10)
 
         #Botones
-        Scan = customtkinter.CTkButton(button_frame, 
+        self.scan_button = customtkinter.CTkButton(button_frame, 
             text="Escanear",
             font=("Helvetica", 12),
             corner_radius=6,
-            command=self.execute_scan)
-        Scan.grid(row=2, column=1, pady=5, padx=15)
+            command=self.start_scan)
+        self.scan_button.grid(row=2, column=1, pady=5, padx=15)
 
-        Cancel = customtkinter.CTkButton(button_frame, 
+        self.cancel_button = customtkinter.CTkButton(button_frame, 
             text="Cancelar",
             font=("Helvetica", 12),
             corner_radius=6,
-            command=self.cancel_scan)
-        Cancel.grid(row=2, column=2, pady=5, padx=15)
+            command=self.cancel_scan,
+            state="disabled")
+        self.cancel_button.grid(row=2, column=2, pady=5, padx=15)
     
         PrintPDF = customtkinter.CTkButton(button_frame, 
             text="Generar PDF",
@@ -139,9 +144,17 @@ class NmapGUI:
 
         self.app.mainloop()
 
-    def on_close(self):
-        self.app.destroy()
-        self.parent.deiconify()
+    def start_scan(self):
+        # Inicia el escaneo en un hilo separado.
+        if self.scan_running:
+            return  # Si ya hay un escaneo en curso, no hace nada
+        self.scan_running = True
+        self.scan_button.configure(state="disabled")
+        self.cancel_button.configure(state="normal")
+
+            # Iniciar el escaneo en un hilo separado
+        self.scan_thread = threading.Thread(target=self.execute_scan)
+        self.scan_thread.start()
 
     # Función para obtener el comando según el perfil seleccionado
     def get_command(self,profile, target):
@@ -182,26 +195,44 @@ class NmapGUI:
 
         if not target:
             messagebox.showwarning("Advertencia", "Por favor, ingrese un objetivo.")
+            self.reset_buttons()
             return
         
         command = self.command_entry.get()  # Obtén el comando actual
 
         # Ejecutar el comando y mostrar el resultado
         try:
-            result = subprocess.check_output(command, shell=True, text=True)
-            self.update_textbox(result)  # Mostrar el resultado del escaneo
-            # Añadir el resultado al historial
-            self.scan_history.append(result)
-        except subprocess.CalledProcessError as e:
-            error_message = f"Error al ejecutar Nmap: {e}"
-            self.update_textbox(error_message)
-            messagebox.showerror("Error", error_message)
+            self.process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            
+            output = []
+
+            for line in self.process.stdout:
+                output.append(line)
+                self.update_textbox("".join(output))
+            
+            # Esperar a que el proceso termine
+            self.process.wait()
+            self.scan_history.append("".join(output))
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al ejecutar Nmap: {str(e)}")
+        finally:
+            self.reset_buttons()
+
+    def reset_buttons(self):
+        self.scan_running = False
+        self.scan_button.configure(state="normal")
+        self.cancel_button.configure(state="disabled")
     
     def cancel_scan(self):
-        if self.scan_process:
-            self.scan_process.terminate()
-            self.scan_process = None
-            self.update_textbox("Escaneo cancelado.")
+        #Cancela el escaneo.
+        if self.process and self.process.poll() is None:  # Si el proceso sigue activo
+            self.process.kill()  # Enviar señal de terminación
+            self.process.wait()  # Esperar a que se cierre
+            self.process.stdout.close()
+            self.process.stderr.close()
+            messagebox.showinfo("Cancelar", "El escaneo ha sido detenido.")
+        self.reset_buttons()
     
     def show_output(self):
         # Mostrar el resultado del escaneo actual
@@ -225,6 +256,14 @@ class NmapGUI:
         
         for button in [self.output_button, self.history_button]:
             button.configure(text_color=text_color, hover_color=hover_color)
+
+    def on_close(self):
+        # Cierra la aplicación de forma segura.
+        if self.process and self.process.poll() is None:
+            self.process.terminate()
+            self.process.wait()
+        self.app.destroy()
+        self.parent.deiconify()
 
 if __name__ == "__main__":
       NmapGUI()

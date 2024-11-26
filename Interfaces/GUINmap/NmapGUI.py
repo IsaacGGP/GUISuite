@@ -10,7 +10,6 @@ class NmapGUI:
 
     def __init__(self, parent):
         self.parent = parent
-        # Inicializar una lista para almacenar el historial de resultados
         self.scan_history = []
         self.scan_thread = None  # Hilo para el escaneo
         self.process = None
@@ -19,18 +18,20 @@ class NmapGUI:
 
     def setup_ui(self):
         #Color de tema
-        customtkinter.set_appearance_mode("System")
+        customtkinter.set_appearance_mode("dark")
         customtkinter.set_default_color_theme("blue")
+        self.bg_color = "transparent"
+        self.button_color = "#0078D7" 
 
         self.app = customtkinter.CTk()
         self.app.title("Nmap")
         script_dir = os.path.dirname(os.path.abspath(__file__))
         icon_path = os.path.join(script_dir, "../../img/NmapIcon.ico")
         self.app.iconbitmap(icon_path)
-        self.app.minsize(900, 600)
+        self.app.minsize(900, 680)
 
         window_width = 900
-        window_height = 600
+        window_height = 680
         screen_width = self.app.winfo_screenwidth()
         screen_height = self.app.winfo_screenheight()
         x_coordinate = int((screen_width / 2) - (window_width / 2))
@@ -38,15 +39,15 @@ class NmapGUI:
         self.app.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
 
         #Frame principal
-        main_frame = customtkinter.CTkFrame(master=self.app, fg_color="transparent")
+        main_frame = customtkinter.CTkFrame(master=self.app, fg_color=self.bg_color)
         main_frame.pack(padx=20, pady=20)
 
         # Frame para los campos de entrada
-        input_frame = customtkinter.CTkFrame(master=main_frame, fg_color="transparent")
+        input_frame = customtkinter.CTkFrame(master=main_frame, fg_color=self.bg_color)
         input_frame.grid(row=0, column=0, padx=10, pady=10)
 
         # Sub-Frame para "Target"
-        target_frame = customtkinter.CTkFrame(master=input_frame, fg_color="transparent")
+        target_frame = customtkinter.CTkFrame(master=input_frame, fg_color=self.bg_color)
         target_frame.grid(row=0, column=0, padx=10, pady=5, sticky="w")
 
         Target_label = customtkinter.CTkLabel(target_frame, text="Objetivo:", font=("helvetica", 14))
@@ -57,7 +58,7 @@ class NmapGUI:
         self.target_entry.bind("<KeyRelease>", self.update_command)
 
         # Sub-Frame para "Perfil"
-        profile_frame = customtkinter.CTkFrame(master=input_frame, fg_color="transparent")
+        profile_frame = customtkinter.CTkFrame(master=input_frame, fg_color=self.bg_color)
         profile_frame.grid(row=0, column=1, padx=10, pady=5, sticky="w")
 
         profile_label = customtkinter.CTkLabel(profile_frame, text="Perfil:", font=("helvetica", 14))
@@ -71,7 +72,7 @@ class NmapGUI:
         profile_menu.grid(row=0, column=3, padx=5, pady=5)
 
         # Sub-Frame para Command
-        command_frame = customtkinter.CTkFrame(input_frame, fg_color="transparent")
+        command_frame = customtkinter.CTkFrame(input_frame, fg_color=self.bg_color)
         command_frame.grid(row=2, column=0, columnspan=2, pady=5)
 
         command_label = customtkinter.CTkLabel(command_frame, text="Comando:", font=("helvetica", 14))
@@ -80,7 +81,7 @@ class NmapGUI:
         self.command_entry.grid(row=1, column=1, columnspan=3, pady=5, padx=5)
 
         # Frame para los botones
-        button_frame = customtkinter.CTkFrame(master=main_frame, fg_color="transparent")
+        button_frame = customtkinter.CTkFrame(master=main_frame, fg_color=self.bg_color)
         button_frame.grid(row=1, column=0, padx=10, pady=10)
 
         #Botones
@@ -88,7 +89,8 @@ class NmapGUI:
             text="Escanear",
             font=("Helvetica", 12),
             corner_radius=6,
-            command=self.start_scan)
+            command=self.start_scan,
+            fg_color=self.button_color)
         self.scan_button.grid(row=2, column=1, pady=5, padx=15)
 
         self.cancel_button = customtkinter.CTkButton(button_frame, 
@@ -96,22 +98,24 @@ class NmapGUI:
             font=("Helvetica", 12),
             corner_radius=6,
             command=self.cancel_scan,
-            state="disabled")
+            state="disabled",
+            fg_color=self.button_color)
         self.cancel_button.grid(row=2, column=2, pady=5, padx=15)
     
         PrintPDF = customtkinter.CTkButton(button_frame, 
             text="Generar PDF",
             font=("Helvetica", 12),
             corner_radius=6,
-            command=self.generate_pdf)
+            command=self.generate_pdf,
+            fg_color=self.button_color)
         PrintPDF.grid(row=2, column=3, pady=5, padx=15)
 
         # Frame para los resultados
-        result_frame = customtkinter.CTkFrame(master=main_frame, fg_color="transparent")
+        result_frame = customtkinter.CTkFrame(master=main_frame, fg_color=self.bg_color)
         result_frame.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
         # Botones para cambiar entre "Output" e "Historial"
-        options_frame = customtkinter.CTkFrame(master=result_frame, fg_color="transparent")
+        options_frame = customtkinter.CTkFrame(master=result_frame, fg_color=self.bg_color)
         options_frame.grid(row=0, column=0, pady=5, sticky="w")
 
         output_button = customtkinter.CTkButton(options_frame, 
@@ -132,7 +136,7 @@ class NmapGUI:
         command=self.show_history)
         history_button.grid(row=0, column=1, padx=5)
 
-        self.result_text = customtkinter.CTkTextbox(result_frame, width=700, height=350)
+        self.result_text = customtkinter.CTkTextbox(result_frame, width=700, height=350, border_color="#616161", border_width=2)
         self.result_text.grid(row=1, column=0, padx=15, pady=8, sticky='nsew')
 
         result_frame.columnconfigure(0, weight=1)
@@ -151,8 +155,7 @@ class NmapGUI:
         self.scan_running = True
         self.scan_button.configure(state="disabled")
         self.cancel_button.configure(state="normal")
-
-            # Iniciar el escaneo en un hilo separado
+        # Iniciar el escaneo en un hilo separado
         self.scan_thread = threading.Thread(target=self.execute_scan)
         self.scan_thread.start()
 
@@ -243,19 +246,6 @@ class NmapGUI:
         # Mostrar todo el historial
         history_text = "\n".join(self.scan_history) if self.scan_history else "No hay historial disponible."
         self.update_textbox(history_text)
-
-    # Función para actualizar los colores de los botones según el tema
-    def update_button_colors(self):
-        theme = customtkinter.get_appearance_mode()
-        if theme == "dark":
-            text_color = "white"
-            hover_color = "#333"
-        else:
-            text_color = "black"
-            hover_color = "#f0f0f0"
-        
-        for button in [self.output_button, self.history_button]:
-            button.configure(text_color=text_color, hover_color=hover_color)
 
     def on_close(self):
         # Cierra la aplicación de forma segura.

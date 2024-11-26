@@ -17,7 +17,7 @@ def open_SherlockGUI():
     SherlockGUI(app)
 
 # Configuración del tema
-customtkinter.set_appearance_mode("System")
+customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
 
 # Inicializar la aplicación

@@ -64,11 +64,14 @@ class NmapGUI:
         profile_label = customtkinter.CTkLabel(profile_frame, text="Perfil:", font=("helvetica", 14))
         profile_label.grid(row=0, column=2, sticky="e", pady=10, padx=5)
 
-        profiles = ["Escaneo básico", "Escaneo rápido", "Escaneo profundo", "Escaneo de vulnerabilidades", "Escaneo de ping", "Detección de firewall e IPS", "Escaneo UDP", "Escaneo personalizado"]
+        profiles = ["Escaneo básico", "Escaneo rápido", "Escaneo profundo", 
+                    "Escaneo de vulnerabilidades", "Escaneo de ping", "Detección de firewall e IPS", 
+                    "Escaneo UDP", "Escaneo personalizado"]
         self.profile_var = customtkinter.StringVar(value=profiles[0])
 
         # Crear el menú desplegable para perfiles
-        profile_menu = customtkinter.CTkOptionMenu(profile_frame, variable=self.profile_var, values=profiles, command=self.update_command ,width=300)
+        profile_menu = customtkinter.CTkOptionMenu(profile_frame, variable=self.profile_var, values=profiles, 
+                                                   command=self.update_command ,width=300)
         profile_menu.grid(row=0, column=3, padx=5, pady=5)
 
         # Sub-Frame para Command

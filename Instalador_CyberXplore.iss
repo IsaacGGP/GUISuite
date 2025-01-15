@@ -4,7 +4,7 @@ AppVersion=1.0
 DefaultDirName={commonpf}\CyberXplore
 DefaultGroupName=CyberXplore
 OutputDir=Output
-OutputBaseFilename=CyberXplore
+OutputBaseFilename=CyberXploreInstaller
 UninstallDisplayIcon={app}\CyberXplore.exe
 Uninstallable=yes
 Compression=lzma
@@ -43,8 +43,11 @@ Filename: "cmd.exe"; Parameters: "/C python -m pip install -r {app}\interfaces\G
 ; Ejecutar la aplicación CyberXplore después de la instalación
 Filename: "{app}\CyberXplore.exe"; Flags: nowait postinstall
 
+; Ejecutar Sherlock después de la instalación
+Filename: "cmd.exe"; Parameters: "/C python {app}\interfaces\GUISherlock\sherlock-main.py"; Flags: nowait postinstall; Check: IsPythonInstalled
+
 [UninstallDelete]
-; Eliminar archivos y carpetas durante la desinstalación
+; Eliminar archivos y carpetas de CyberXplore durante la desinstalación
 Type: files; Name: "{app}\interfaces\GUINmap\*"
 Type: dirifempty; Name: "{app}\interfaces\GUINmap"
 Type: files; Name: "{app}\interfaces\GUISherlock\*"
@@ -53,9 +56,13 @@ Type: files; Name: "{app}\CyberXplore.exe"
 Type: dirifempty; Name: "{app}"
 
 [Icons]
-; Crear accesos directos en el escritorio y en el menú de inicio
+; Crear accesos directos en el escritorio y en el menú de inicio para CyberXplore
 Name: "{group}\CyberXplore"; Filename: "{app}\CyberXplore.exe"
 Name: "{commondesktop}\CyberXplore"; Filename: "{app}\CyberXplore.exe"
+
+; Crear accesos directos en el escritorio y en el menú de inicio para Sherlock
+Name: "{group}\Sherlock"; Filename: "cmd.exe"; Parameters: "/C python {app}\interfaces\GUISherlock\sherlock-main.py"
+Name: "{commondesktop}\Sherlock"; Filename: "cmd.exe"; Parameters: "/C python {app}\interfaces\GUISherlock\sherlock-main.py"
 
 [Code]
 function IsPythonInstalled: Boolean;
